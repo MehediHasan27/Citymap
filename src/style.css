@@ -8,11 +8,19 @@
   --slate: #0e1726;
   --ink: #1b2430;      /* 10.9:1 on --paper */
   --muted: #4e5766;    /* 5.1:1 on --paper  */
-  --rust: #8a3f22;     /* 5.2:1 on --paper  */
   --surface: #f2f0ea;  /* panel card        */
-  --deep-teal: #1d6373; /* 6.1:1 on --surface */
-  --terracotta: #d2734a;
-  --amber: #f2a93b;
+  /* Accent is a gradient, not a colour. The old amber/terracotta sat a shade away
+     from the terracotta roofs baked into the render, so the interface read as an
+     extension of the artwork instead of a layer on top of it. A cool indigo-violet
+     is unmistakably UI against a warm plate.
+     Both text stops clear WCAG AA on --paper AND on --surface; the bright stops
+     are for dots, rims and glows only, never for type. */
+  --a1: #4338ca;   /* 5.5:1 on --paper */
+  --a2: #6d28d9;   /* 5.0:1 on --paper */
+  --a3: #0e7490;
+  --accent-grad: linear-gradient(120deg, var(--a1) 0%, var(--a2) 55%, var(--a3) 100%);
+  --accent-bright: linear-gradient(135deg, #6366f1 0%, #a855f7 55%, #22d3ee 100%);
+  --accent-ring: rgba(109, 40, 217, 0.26);
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -87,7 +95,10 @@ body.is-open .masthead {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--rust);
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .masthead h1 {
   margin: 0 0 12px;
@@ -137,19 +148,19 @@ body.is-open .masthead {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--terracotta);
-  box-shadow: 0 0 0 0 rgba(210, 115, 74, 0.5);
+  background: var(--accent-grad);
+  box-shadow: 0 0 0 0 var(--accent-ring);
   transition: box-shadow 0.4s var(--ease), background 0.28s var(--ease);
 }
 .hotspot:hover,
 .hotspot.is-hover {
   background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(242, 169, 59, 0.6);
+  border-color: rgba(109, 40, 217, 0.42);
   box-shadow: 0 5px 20px rgba(14, 23, 38, 0.16);
 }
 .hotspot.is-hover .dot {
-  background: var(--amber);
-  box-shadow: 0 0 0 5px rgba(242, 169, 59, 0.22);
+  background: var(--accent-bright);
+  box-shadow: 0 0 0 5px var(--accent-ring);
 }
 .hotspot:focus-visible {
   outline: 2px solid var(--slate);
@@ -215,7 +226,10 @@ body.is-open .hotspot:focus-visible { opacity: 1; }
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--deep-teal);
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 #panel h2 {
   margin: 0;

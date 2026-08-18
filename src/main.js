@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DISTRICTS, pick } from './districts.js';
 import { createGlobe, TARGET } from './globe.js';
+import { createClouds } from './clouds.js';
 import './style.css';
 
 const MEDIA_ASPECT = 16 / 9;
@@ -184,7 +185,15 @@ const material = new THREE.ShaderMaterial({
       vec3 lifted = col * 1.05 + (col - vec3(luma)) * 0.16;
 
       col = mix(col, mix(dimmed, lifted, inside), uActiveAmt);
-      col += vec3(0.95, 0.66, 0.23) * rim * uActiveAmt * 0.5;
+
+      /* Selection rim runs the accent gradient across the plot rather than sitting
+       * on one amber. Amber was a near-match for the terracotta roofs in the plate,
+       * so the highlight looked like part of the render instead of a UI state. */
+      float g = clamp((img.x - uActive.x) / (2.0 * uActive.z) + 0.5, 0.0, 1.0);
+      vec3 rimCol = g < 0.5
+        ? mix(vec3(0.388, 0.400, 0.945), vec3(0.659, 0.333, 0.969), g * 2.0)
+        : mix(vec3(0.659, 0.333, 0.969), vec3(0.133, 0.827, 0.933), (g - 0.5) * 2.0);
+      col += rimCol * rim * uActiveAmt * 0.62;
 
       // grain + vignette, keyed off the plate so it survives the zoom
       col += (hash(vUv * (1.0 + fract(uTime))) - 0.5) * 0.014;
@@ -326,7 +335,8 @@ canvas.addEventListener('click', (e) => {
  * land on the exact framing of the plate, and a generated descent would have to
  * match a locked frame it has never seen. Geometry can be aimed; footage cannot.
  * ------------------------------------------------------------------ */
-const globe = createGlobe({ paper: '#dad7d2', ink: '#28313d', accent: '#c2582f' });
+const globe = createGlobe({ paper: '#dad7d2', ink: '#28313d', accent: '#7c3aed' });
+const clouds = createClouds({ tint: '#ffffff' });
 
 const introEl = document.getElementById('intro');
 const captionEl = document.getElementById('intro-caption');
@@ -344,6 +354,7 @@ const intro = {
   progress: SKIP_INTRO ? 1 : 0,
   overZoom: 1,
   caption: -1,
+  settle: SKIP_INTRO ? 99 : 0,   // seconds since landing; drives the cloud decay
 
   /* The plate fades up over the last stretch of the descent and arrives slightly
    * over-zoomed, so it keeps falling for a beat after the globe has gone — the
@@ -396,7 +407,10 @@ if (SKIP_INTRO) {
   globe.setProgress(1, 0);
 } else {
   document.body.classList.add('is-intro');
-  globe.setProgress(0, 0);
+  // step(0) rather than setProgress(0): it also writes the first caption. Waiting
+  // for the first animation frame leaves the caption blank, which is visible
+  // whenever rAF is delayed — a background tab, a throttled renderer, a slow load.
+  intro.step(0, 0);
 }
 
 /* ------------------------------------------------------------------ *
@@ -406,6 +420,7 @@ function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   globe.resize(w, h, renderer.getPixelRatio());
+  clouds.resize(w, h);
   updateFit(w, h);
   applyFocusTarget();   // baseZoom moved, so the resting zoom moved with it
 }
@@ -423,6 +438,20 @@ function tick(now) {
   last = now;
 
   if (intro.running) intro.step(dt, now / 1000);
+  else intro.settle += dt;
+
+  /* Clouds hold steady over the globe, accelerate as the camera falls through
+   * them, then decay once the map has landed. The decay is the "merge": for a
+   * second or so they are still drifting across the plate on top of the clouds
+   * painted into it, and they thin out rather than cutting, so the two sets read
+   * as one. Left running forever they would just be haze over the interface. */
+  const dive = Math.min(1, Math.max(0, (intro.progress - 0.5) / 0.4));
+  // Decays to a floor rather than to zero. The plate has clouds painted into it,
+  // so leaving a thin live layer drifting over them is what actually completes the
+  // merge — cut it to nothing and the descent's weather just disappears.
+  const cloudFade = Math.max(0.22, 1 - intro.settle / 2.0);
+  const cloudOpacity = REDUCED ? 0 : (0.78 - 0.34 * dive) * cloudFade;
+  clouds.update(now / 1000, cloudOpacity, 1 + dive * 3.6);
 
   // parallax rides the focus point, so pointer maths and shader stay in lockstep
   const px = pointer.has && !opened && !intro.running ? (pointer.x - 0.5) * 0.012 : 0;
@@ -455,6 +484,8 @@ function tick(now) {
   renderer.clear();
   if (intro.progress < 1) renderer.render(globe.scene, globe.camera);
   renderer.render(scene, camera);
+  // last, so the same clouds pass over the globe and the plate alike
+  if (cloudOpacity > 0.002) renderer.render(clouds.scene, clouds.camera);
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
@@ -483,7 +514,7 @@ if (DEBUG) {
   console.info('[metro] debug: district diamonds drawn over the plate');
   // handle for scrubbing the descent while tuning it: __metro.seek(0.45)
   window.__metro = {
-    intro, globe, uniforms, view, target,
+    intro, globe, clouds, uniforms, view, target,
     seek: (p) => { intro.t = p * INTRO_SECONDS; intro.step(0, performance.now() / 1000); },
   };
 }

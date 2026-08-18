@@ -55,6 +55,13 @@ credits, and re-times in a line of code.
   sides. It frames against whichever axis is tighter.
 - **The marker is gone before the camera arrives.** A ring sitting on the surface becomes a
   screen-filling blur the instant you fly into it.
+- **Clouds are a pass over everything, not part of the globe scene** (`clouds.js`). Three fbm
+  layers scrolling horizontally at different rates, sampled twice per pixel so each cloud has
+  a lit top and a shadowed underside. Drawn last, above both scenes: if they lived inside the
+  globe they would die at the handover and read as two separate weather systems, whereas the
+  clouds crossing the planet are still crossing the plate a second later. They accelerate as
+  the camera falls through them, then decay to a floor rather than to zero, so a thin live
+  layer keeps drifting over the clouds painted into the render.
 - The plate fades up from `p 0.66` and arrives slightly over-zoomed, so it keeps moving for
   a beat after the globe has gone and the handover reads as one continuous fall.
 
@@ -121,6 +128,11 @@ invisible. This is what makes "click to go in" hold up at 720p source resolution
 - **The void is not flat.** It carries a gradient (#ecece4 top-left → #dad7d2). The shader
   clamps its sample rather than painting a constant, which extends that gradient seamlessly
   past the plate edge. Any single fill colour leaves a visible band.
+- **The accent is a gradient, not a colour.** The original amber/terracotta sat a shade away
+  from the terracotta roofs baked into the plate, so the interface read as an extension of the
+  artwork rather than a layer on top of it. Indigo-violet is unmistakably UI against a warm
+  render. Both text stops clear WCAG AA on `--paper` and on `--surface`; the bright stops are
+  for dots, rims and glows only, never type.
 - **`--paper` is that measured void**, so the page and the diorama are one surface. The type
   tokens are picked to clear WCAG AA against it — the obvious lighter greys fail at 11–15px.
 - **The detail drawer has an edge, not a fade.** It used to dissolve into the render across
