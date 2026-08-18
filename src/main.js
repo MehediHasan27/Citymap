@@ -82,8 +82,14 @@ const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1);
  * textures decode sRGB -> linear on read, that linear value lands in the framebuffer
  * unencoded and the whole plate renders dark. Everything here stays in display
  * space instead — no decode, no encode, footage out exactly as it was graded. */
+/* Assets resolve against Vite's base, not the site root. A GitHub project page is
+ * served from /<repo>/, so a hardcoded "/media/..." 404s there. Vite rewrites such
+ * paths in HTML for you but never inside JS string literals — these have to be
+ * built by hand. BASE_URL always ends in a slash. */
+const asset = (p) => import.meta.env.BASE_URL + p;
+
 const loader = new THREE.TextureLoader();
-const stillTex = loader.load('/media/city-iso.jpg');
+const stillTex = loader.load(asset('media/city-iso.jpg'));
 stillTex.colorSpace = THREE.NoColorSpace;
 stillTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
@@ -93,8 +99,8 @@ const video = Object.assign(document.createElement('video'), {
 video.setAttribute('muted', '');
 video.setAttribute('playsinline', '');
 // webm first: 245 KB vs 1.1 MB for the same 226 frames
-for (const [src, type] of [['/media/city-iso.web.webm', 'video/webm'], ['/media/city-iso.web.mp4', 'video/mp4']]) {
-  video.appendChild(Object.assign(document.createElement('source'), { src, type }));
+for (const [src, type] of [['media/city-iso.web.webm', 'video/webm'], ['media/city-iso.web.mp4', 'video/mp4']]) {
+  video.appendChild(Object.assign(document.createElement('source'), { src: asset(src), type }));
 }
 /* Kept in the document rather than detached: iOS Safari will not reliably decode
  * a detached element into a texture. 1px and transparent, never display:none —
