@@ -32,7 +32,19 @@ credits, and re-times in a line of code.
   crosses the antimeridian and a flat lon/lat ray cast cannot express that.
 - **Dots are sampled equal-area** — longitude samples per ring scale with `cos(lat)`. A plain
   lon/lat grid piles dots at the poles and thins them at the equator, which reads as a lit
-  pole rather than a globe.
+  pole rather than a globe. ~24k dots at 0.72°.
+- **A graticule does most of the 3D work.** Land alone leaves no reference across open ocean
+  and the sphere reads as a flat sticker; meridians and parallels curving over the limb say
+  "ball" immediately.
+- **Orientation is yaw-then-pitch, not a slerp.** A slerp between two orientations takes the
+  shortest arc, which is a nudge — it cannot spin. Decomposing lets the yaw carry whole extra
+  turns that unwind into the target, so the globe spins down onto the country and decelerates
+  into the lock. The opening longitude is set explicitly (`START_LON`), because otherwise
+  whatever fraction of a turn you pick decides it, and most fractions open on empty Pacific.
+- **Draw order is explicit.** Every globe layer is transparent and centred on the same origin,
+  so Three's depth sort has nothing to separate them by and the shell can end up painting over
+  the very dots it exists to back. Shell first (writing depth, so it occludes the far
+  hemisphere), then graticule, dots, rim, marker.
 - **The interior is a shaded solid.** Without it, far-side dots show through and the globe
   reads flat. It is shaded rather than flat-filled because on a paper background an unshaded
   sphere is indistinguishable from a disc.
@@ -109,6 +121,12 @@ invisible. This is what makes "click to go in" hold up at 720p source resolution
   past the plate edge. Any single fill colour leaves a visible band.
 - **`--paper` is that measured void**, so the page and the diorama are one surface. The type
   tokens are picked to clear WCAG AA against it — the obvious lighter greys fail at 11–15px.
+- **The detail drawer has an edge, not a fade.** It used to dissolve into the render across
+  its full width, which put the left column of copy — and the first stat in the row — on top
+  of live city detail, so text and map cut into each other. It is now solid ground with one
+  hairline and a shadow. Below 900px it becomes a bottom sheet, because a 430px side drawer
+  buries the map it is describing; `view.sheet` tracks that same breakpoint so an opened
+  district is nudged up rather than sideways.
 
 ## Accessibility
 
