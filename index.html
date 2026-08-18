@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Metro — an isometric city you can walk through</title>
+    <meta name="description" content="Seven districts of a miniature city. Hover to find them, click to go in." />
+    <link rel="preload" as="image" href="/media/city-iso.poster.jpg" />
+  </head>
+  <body>
+    <canvas id="stage" aria-hidden="true"></canvas>
+
+    <div id="intro">
+      <p id="intro-caption" aria-live="polite"></p>
+      <button id="intro-skip" type="button">Skip to the map</button>
+    </div>
+
+    <main id="ui">
+      <header class="masthead">
+        <p class="eyebrow">Metro</p>
+        <h1>Seven districts,<br />one square mile.</h1>
+        <p class="lede">Move across the tile to find a district. Open one to read it.</p>
+      </header>
+
+      <!-- District buttons are injected here: real DOM, real buttons, real tab order -->
+      <div id="hotspots" role="group" aria-label="City districts"></div>
+
+      <aside id="panel" hidden aria-live="polite">
+        <button id="panel-close" aria-label="Close district">Close</button>
+        <p class="panel-eyebrow" id="panel-eyebrow"></p>
+        <h2 id="panel-title"></h2>
+        <p id="panel-body"></p>
+        <dl id="panel-stats"></dl>
+      </aside>
+
+      <footer class="hint" id="hint">
+        <kbd>Tab</kbd> to cycle districts · <kbd>Enter</kbd> to open · <kbd>Esc</kbd> to back out
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

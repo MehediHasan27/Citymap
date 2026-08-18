@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Generation masters: the source PNG, the raw Seedance mp4 and the pre-encode
+# loop. ~12 MB of binaries that nothing at runtime reads — public/media holds the
+# web-ready derivatives. Keep them locally; see README for how they were made.
+_src/
+
+# Local editor/tool config. The launch config this project actually uses lives
+# in the parent workspace, so a copy here would just be a dead file.
+.claude/
